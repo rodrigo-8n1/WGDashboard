@@ -1123,7 +1123,7 @@ class DashboardConfig:
                 "wg_conf_path": "/etc/wireguard",
                 "app_prefix": "",
                 "app_ip": "0.0.0.0",
-                "app_port": "10086",
+                "app_port": "8181",
                 "auth_req": "true",
                 "version": DASHBOARD_VERSION,
                 "dashboard_refresh_interval": "60000",
