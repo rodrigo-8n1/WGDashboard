@@ -1015,7 +1015,7 @@ class Peer:
             if len(updateAllowedIp.decode().strip("\n")) != 0:
                 return ResponseObject(False,
                                       "Update peer failed when updating allowed IPs")
-            saveConfig = subprocess.check_output(f"ip netns exec {self.Name}  wg-quick save {self.configuration.Name}",
+            saveConfig = subprocess.check_output(f"ip netns exec {self.configuration.Name}  wg-quick save {self.configuration.Name}",
                                                  shell=True, stderr=subprocess.STDOUT)
             if f"ip netns exec {self.configuration.Name}  wg showconf {self.configuration.Name}" not in saveConfig.decode().strip('\n'):
                 return ResponseObject(False,
@@ -1054,7 +1054,7 @@ MTU = {str(self.mtu)}
 [Peer]
 PublicKey = {self.configuration.PublicKey}
 AllowedIPs = {self.endpoint_allowed_ip}
-Endpoint = {DashboardConfig.GetConfig("Peers", "remote_endpoint")[1]}:{self.configuration.ListenPort}
+Endpoint = {self.configuration.Name}.com.:{self.configuration.ListenPort}
 PersistentKeepalive = {str(self.keepalive)}
 '''
         if len(self.preshared_key) > 0:
@@ -1111,7 +1111,6 @@ class DashboardConfig:
         self.__config = configparser.ConfigParser(strict=False)
         self.__config.read_file(open(DASHBOARD_CONF, "r+"))
         self.hiddenAttribute = ["totp_key"]
-        endp = ifcfg.default_interface()['device'] + ".com."
         self.__default = {
             "Account": {
                 "username": "admin",
@@ -1136,7 +1135,7 @@ class DashboardConfig:
                 "peer_global_DNS": "8.8.8.8",
                 "peer_endpoint_allowed_ip": "172.31.0.0/16",
                 "peer_display_mode": "grid",
-                "remote_endpoint": endp,
+                "remote_endpoint": "",
                 "peer_MTU": "1240",
                 "peer_keep_alive": "21"
             },

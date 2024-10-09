@@ -35,7 +35,7 @@ def togglePeerAccess(data, g):
                 f.write(moveLockToUnlock[-1])
                 f.close()
                 subprocess.check_output(
-                    f"ip netns exec {data['config']}  set {data['config']} peer {moveLockToUnlock[0]} allowed-ips {moveLockToUnlock[11]} preshared-key {f_name}",
+                    f"ip netns exec {data['config']}  wg set {data['config']} peer {moveLockToUnlock[0]} allowed-ips {moveLockToUnlock[11]} preshared-key {f_name}",
                     shell=True, stderr=subprocess.STDOUT)
                 os.remove(f_name)
             status = subprocess.check_output(f"ip netns exec {data['config']}  wg-quick save {data['config']}", shell=True, stderr=subprocess.STDOUT)
