@@ -1111,6 +1111,7 @@ class DashboardConfig:
         self.__config = configparser.ConfigParser(strict=False)
         self.__config.read_file(open(DASHBOARD_CONF, "r+"))
         self.hiddenAttribute = ["totp_key"]
+        endp = ifcfg.default_interface()['device'] + ".com."
         self.__default = {
             "Account": {
                 "username": "admin",
@@ -1132,11 +1133,11 @@ class DashboardConfig:
                 "dashboard_api_key": "false"
             },
             "Peers": {
-                "peer_global_DNS": "1.1.1.1",
-                "peer_endpoint_allowed_ip": "0.0.0.0/0",
+                "peer_global_DNS": "8.8.8.8",
+                "peer_endpoint_allowed_ip": "172.31.0.0/16",
                 "peer_display_mode": "grid",
-                "remote_endpoint": ifcfg.default_interface()['inet'],
-                "peer_MTU": "1420",
+                "remote_endpoint": endp,
+                "peer_MTU": "1240",
                 "peer_keep_alive": "21"
             },
             "Other": {
