@@ -352,7 +352,7 @@ start_core() {
 	# Start WireGuard for each config file
 	for file in $config_files; do
 		config_name=$(basename "$file" ".conf")
-		wg-quick up "$config_name"
+		ip netns exec "$config_name" wg-quick up "$config_name"
 	done
 }
 

@@ -26,7 +26,7 @@ def togglePeerAccess(data, g):
         try:
             if len(moveLockToUnlock[-1]) == 0:
                 status = subprocess.check_output(
-                    f"wg set {data['config']} peer {moveLockToUnlock[0]} allowed-ips {moveLockToUnlock[11]}",
+                    f"ip netns exec {data['config']}  wg set {data['config']} peer {moveLockToUnlock[0]} allowed-ips {moveLockToUnlock[11]}",
                     shell=True, stderr=subprocess.STDOUT)
             else:
                 now = str(datetime.datetime.now().strftime("%m%d%Y%H%M%S"))
@@ -35,10 +35,10 @@ def togglePeerAccess(data, g):
                 f.write(moveLockToUnlock[-1])
                 f.close()
                 subprocess.check_output(
-                    f"wg set {data['config']} peer {moveLockToUnlock[0]} allowed-ips {moveLockToUnlock[11]} preshared-key {f_name}",
+                    f"ip netns exec {data['config']}  set {data['config']} peer {moveLockToUnlock[0]} allowed-ips {moveLockToUnlock[11]} preshared-key {f_name}",
                     shell=True, stderr=subprocess.STDOUT)
                 os.remove(f_name)
-            status = subprocess.check_output(f"wg-quick save {data['config']}", shell=True, stderr=subprocess.STDOUT)
+            status = subprocess.check_output(f"ip netns exec {data['config']}  wg-quick save {data['config']}", shell=True, stderr=subprocess.STDOUT)
             g.cur.execute(
                 f"INSERT INTO {data['config']} SELECT * FROM {data['config']}_restrict_access WHERE id = '{data['peerID']}'")
             if g.cur.rowcount == 1:
@@ -157,7 +157,7 @@ class manageConfiguration:
             if i['conf'] == data['name']:
                 if i['status'] == "running":
                     try:
-                        subprocess.check_output("wg-quick down " + data['name'], shell=True, stderr=subprocess.STDOUT)
+                        subprocess.check_output("ip netns exec " + data['name'] + " wg-quick down " + data['name'], shell=True, stderr=subprocess.STDOUT)
                     except subprocess.CalledProcessError as exc:
                         return {"status": False, "reason": "Can't stop peer", "data": str(exc.output.strip().decode("utf-8"))}
 
@@ -213,7 +213,7 @@ class manageConfiguration:
                 
 
                 try:
-                    check = subprocess.check_output("wg-quick down " + configName,
+                    check = subprocess.check_output("ip netns exec " + configName + " wg-quick down " + configName,
                                                     shell=True, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as exc:
                     pass
@@ -221,7 +221,7 @@ class manageConfiguration:
                     for i in newData:
                         f.write(i)
                 try:
-                    check = subprocess.check_output("wg-quick up " + configName,
+                    check = subprocess.check_output("ip netns exec " + configName + " wg-quick up " + configName,
                                                     shell=True, stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as exc:
                     pass

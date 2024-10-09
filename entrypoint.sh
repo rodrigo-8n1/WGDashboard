@@ -187,7 +187,7 @@ start_core() {
       fi
 
       if [ -f "/etc/wireguard/${interface}.conf" ]; then
-        wg-quick up $interface
+        ip netns exec $interface wg-quick up $interface
       else
         echo "No corresponding configuration file found for $interface doing nothing."
       fi

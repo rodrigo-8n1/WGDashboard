@@ -680,10 +680,10 @@ class WireguardConfiguration:
             
     def addPeers(self, peers: list):
         for p in peers:
-            subprocess.check_output(f"wg set {self.Name} peer {p['id']} allowed-ips {p['allowed_ip']}", 
+            subprocess.check_output(f"ip netns exec {self.Name}  wg set {self.Name} peer {p['id']} allowed-ips {p['allowed_ip']}",
                                     shell=True, stderr=subprocess.STDOUT)
         subprocess.check_output(
-            f"wg-quick save {self.Name}", shell=True, stderr=subprocess.STDOUT)    
+            f"ip netns exec {self.Name}  wg-quick save {self.Name}", shell=True, stderr=subprocess.STDOUT)
         self.getPeersList()
         
     def searchPeer(self, publicKey):
@@ -711,7 +711,7 @@ class WireguardConfiguration:
                     with open(f"{uid}", "w+") as f:
                         f.write(p['preshared_key'])
                         
-                subprocess.check_output(f"wg set {self.Name} peer {p['id']} allowed-ips {p['allowed_ip']}{f' preshared-key {uid}' if presharedKeyExist else ''}",
+                subprocess.check_output(f"ip netns exec {self.Name}  wg set {self.Name} peer {p['id']} allowed-ips {p['allowed_ip']}{f' preshared-key {uid}' if presharedKeyExist else ''}",
                                         shell=True, stderr=subprocess.STDOUT)
             else:
                 return ResponseObject(False, "Failed to allow access of peer " + i)
@@ -730,7 +730,7 @@ class WireguardConfiguration:
             found, pf = self.searchPeer(p)
             if found:
                 try:
-                    subprocess.check_output(f"wg set {self.Name} peer {pf.id} remove",
+                    subprocess.check_output(f"ip netns exec {self.Name}  wg set {self.Name} peer {pf.id} remove",
                                             shell=True, stderr=subprocess.STDOUT)
                     sqlUpdate("INSERT INTO '%s_restrict_access' SELECT * FROM %s WHERE id = ?" %
                                    (self.Name, self.Name,), (pf.id,))
@@ -762,7 +762,7 @@ class WireguardConfiguration:
             found, pf = self.searchPeer(p)
             if found:
                 try:
-                    subprocess.check_output(f"wg set {self.Name} peer {pf.id} remove",
+                    subprocess.check_output(f"ip netns exec {self.Name}  wg set {self.Name} peer {pf.id} remove",
                                             shell=True, stderr=subprocess.STDOUT)
                     sqlUpdate("DELETE FROM '%s' WHERE id = ?" % self.Name, (pf.id,))
                     numOfDeletedPeers += 1
@@ -797,7 +797,7 @@ class WireguardConfiguration:
 
     def __wgSave(self) -> tuple[bool, str] | tuple[bool, None]:
         try:
-            subprocess.check_output(f"wg-quick save {self.Name}", shell=True, stderr=subprocess.STDOUT)
+            subprocess.check_output(f"ip netns exec {self.Name}  wg-quick save {self.Name}", shell=True, stderr=subprocess.STDOUT)
             return True, None
         except subprocess.CalledProcessError as e:
             return False, str(e)
@@ -806,7 +806,7 @@ class WireguardConfiguration:
         if not self.getStatus():
             self.toggleConfiguration()
         try:
-            latestHandshake = subprocess.check_output(f"wg show {self.Name} latest-handshakes",
+            latestHandshake = subprocess.check_output(f"ip netns exec {self.Name}  wg show {self.Name} latest-handshakes",
                                                       shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
             return "stopped"
@@ -833,7 +833,7 @@ class WireguardConfiguration:
         if not self.getStatus():
             self.toggleConfiguration()
         try:
-            data_usage = subprocess.check_output(f"wg show {self.Name} transfer",
+            data_usage = subprocess.check_output(f"ip netns exec {self.Name}  wg show {self.Name} transfer",
                                                  shell=True, stderr=subprocess.STDOUT)
             data_usage = data_usage.decode("UTF-8").split("\n")
             data_usage = [p.split("\t") for p in data_usage]
@@ -876,7 +876,7 @@ class WireguardConfiguration:
         if not self.getStatus():
             self.toggleConfiguration()
         try:
-            data_usage = subprocess.check_output(f"wg show {self.Name} endpoints",
+            data_usage = subprocess.check_output(f"ip netns exec {self.Name}  wg show {self.Name} endpoints",
                                                  shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError:
             return "stopped"
@@ -892,13 +892,13 @@ class WireguardConfiguration:
         self.getStatus()
         if self.Status:
             try:
-                check = subprocess.check_output(f"wg-quick down {self.Name}",
+                check = subprocess.check_output(f"ip netns exec {self.Name}  wg-quick down {self.Name}",
                                                 shell=True, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as exc:
                 return False, str(exc.output.strip().decode("utf-8"))
         else:
             try:
-                check = subprocess.check_output(f"wg-quick up {self.Name}",
+                check = subprocess.check_output(f"ip netns exec {self.Name}  wg-quick up {self.Name}",
                                                 shell=True, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as exc:
                 return False, str(exc.output.strip().decode("utf-8"))
@@ -1003,21 +1003,21 @@ class Peer:
                 with open(f"{uid}", "w+") as f:
                     f.write(preshared_key)
                 updatePsk = subprocess.check_output(
-                    f"wg set {self.configuration.Name} peer {self.id} preshared-key {uid}",
+                    f"ip netns exec {self.configuration.Name}  wg set {self.configuration.Name} peer {self.id} preshared-key {uid}",
                     shell=True, stderr=subprocess.STDOUT)
                 os.remove(str(uid))
                 if len(updatePsk.decode().strip("\n")) != 0:
                     return ResponseObject(False,
                                           "Update peer failed when updating preshared key")
             updateAllowedIp = subprocess.check_output(
-                f'wg set {self.configuration.Name} peer {self.id} allowed-ips "{allowed_ip.replace(" ", "")}"',
+                f'ip netns exec {self.configuration.Name}  wg set {self.configuration.Name} peer {self.id} allowed-ips "{allowed_ip.replace(" ", "")}"',
                 shell=True, stderr=subprocess.STDOUT)
             if len(updateAllowedIp.decode().strip("\n")) != 0:
                 return ResponseObject(False,
                                       "Update peer failed when updating allowed IPs")
-            saveConfig = subprocess.check_output(f"wg-quick save {self.configuration.Name}",
+            saveConfig = subprocess.check_output(f"ip netns exec {self.Name}  wg-quick save {self.configuration.Name}",
                                                  shell=True, stderr=subprocess.STDOUT)
-            if f"wg showconf {self.configuration.Name}" not in saveConfig.decode().strip('\n'):
+            if f"ip netns exec {self.configuration.Name}  wg showconf {self.configuration.Name}" not in saveConfig.decode().strip('\n'):
                 return ResponseObject(False,
                                       "Update peer failed when saving the configuration.")
             sqlUpdate(
