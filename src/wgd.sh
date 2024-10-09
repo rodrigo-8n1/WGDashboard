@@ -60,11 +60,11 @@ _check_and_set_venv(){
 }
 
 _determineOS(){
-  if [ -f /etc/os-release ]; then
+  if [ -f /etc/redhat-release ]; then
+      OS="redhat"
+  elif [ -f /etc/os-release ]; then
       . /etc/os-release
       OS=$ID
-  elif [ -f /etc/redhat-release ]; then
-      OS="redhat"
   else
       printf "[WGDashboard] %s Sorry, your OS is not supported. Currently the install script only support Debian-based, Red Hat-based OS. With experimental support for Alpine Linux.\n" "$heavy_crossmark"
       printf "%s\n" "$helpMsg"
