@@ -1017,7 +1017,7 @@ class Peer:
                                       "Update peer failed when updating allowed IPs")
             saveConfig = subprocess.check_output(f"ip netns exec {self.configuration.Name}  wg-quick save {self.configuration.Name}",
                                                  shell=True, stderr=subprocess.STDOUT)
-            if f"ip netns exec {self.configuration.Name}  wg showconf {self.configuration.Name}" not in saveConfig.decode().strip('\n'):
+            if f"wg showconf {self.configuration.Name}" not in saveConfig.decode().strip('\n'):
                 return ResponseObject(False,
                                       "Update peer failed when saving the configuration.")
             sqlUpdate(
@@ -2216,3 +2216,4 @@ def startThreads():
 if __name__ == "__main__":
     startThreads()
     app.run(host=app_ip, debug=False, port=app_port)
+
