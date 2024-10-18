@@ -582,7 +582,12 @@ class WireguardConfiguration:
         return _generatePublicKey(self.PrivateKey)[1]
 
     def getStatus(self) -> bool:
-        self.Status = self.Name in psutil.net_if_addrs().keys()
+        try:
+            res = os.popen(f"ip netns exec {self.Name} ls -1 /sys/class/net")
+        except OSError:
+            print (f"Error execuring ip link show for {self.Name} NS")
+        nics = res.read().split()
+        self.Status = self.Name in nics
         return self.Status
 
     def __getRestrictedPeers(self):
@@ -2216,4 +2221,5 @@ def startThreads():
 if __name__ == "__main__":
     startThreads()
     app.run(host=app_ip, debug=False, port=app_port)
+
 

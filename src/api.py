@@ -94,12 +94,13 @@ class manageConfiguration:
 
     def PortCheck(self, data, configs):
         port = data['port']
+        name = data['name']
         if (not port.isdigit()) or int(port) < 1 or int(port) > 65535:
             return {"status": False, "reason": f"Invalid port."}
         for i in configs:
             if i['port'] == port:
                 return {"status": False, "reason": f"{port} used by {i['conf']}."}
-        checkSystem = subprocess.run(f'ss -tulpn | grep :{port} > /dev/null', shell=True)
+        checkSystem = subprocess.run(f'ip netns exec {name} ss -tulpn | grep :{port} > /dev/null', shell=True)
         if checkSystem.returncode != 1:
             return {"status": False, "reason": f"Port {port} used by other process in your system."}
         return good
@@ -188,7 +189,7 @@ class manageConfiguration:
         conf = configparser.RawConfigParser(strict=False)
         conf.optionxform = str
         configName = data['configurationName']
-        pc = manageConfiguration.PortCheck(self, {'port': data['ListenPort']}, configs)
+        pc = manageConfiguration.PortCheck(self, {'port': data['ListenPort'], 'name': configName}, configs)
         if pc['status']:
             try:
                 newData = []
